@@ -1,10 +1,10 @@
-let playerMonsters = {
+let playerMonsters = { 
   default: {
-    name: "Normal",
+    name: "New Test",
     type: "fire",
     encounterEnergy: 0,
     encounterBlock: 0,
-    startingEnergy: 1,
+    startingEnergy: 0,
     opponentMoveIndex: false,
     cardPool: fireCardPool,
     maxHP: 45,
@@ -15,18 +15,22 @@ let playerMonsters = {
     tempDex: 0,
     fightStrength: 0,
     fightDex: 0,
-    turnEnergy: 0,
-    turnCards: 4,
+    turnEnergy: 3,
+    turnCards: 6,
     avatar: "img/fireMonster.png",
     startingDeck: [
-    //2 block
-    cards.withdraw,
-    cards.withdraw,
-    cards.bigwithdraw,
+    //5 attack
+    basicCardsNew.swordSlash,
+    basicCardsNew.swordSlash,
+    basicCardsNew.overheadSwing,
+    basicCardsNew.bowShot,
+    basicCardsNew.bowShot,
     //3 attack
-    cards.tackle,
-    cards.bigtackle,
-    cards.explode
+    basicCardsNew.shieldBlock,
+    basicCardsNew.shieldBlock,
+    basicCardsNew.shieldBlock,
+    basicCardsNew.shieldBlock,
+    basicCardsNew.shieldBlock,
     ],
   },
 
@@ -46,7 +50,7 @@ let playerMonsters = {
     tempDex: 0,
     fightStrength: 0,
     fightDex: 0,
-    turnEnergy: 0,
+    turnEnergy: 3,
     turnCards: 6,
     avatar: "img/watertongue.png",
     startingDeck: [

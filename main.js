@@ -576,13 +576,21 @@ async function removeDealOpponentDamageAnimation(stateObj, calculatedDamage, isA
     
 
 
-async function dealOpponentDamage(stateObj, damageNumber, attackNumber = 1, energyCost=false, all=false, specifiedIndex=false) {
-  let targetIndex = (specifiedIndex) ? specifiedIndex : stateObj.targetedMonster;
+async function dealOpponentDamage(stateObj, damageNumber, attackNumber = 1, energyCost=false, targetType) {
+  let targetIndex = 0
+  let all = false
+  if (targetType === "front") {
+    let targetIndex = 0
+  } else if (targetType === "all") {
+    all = true
+  } else if (targetType === "specific") {
+    targetIndex = stateObj.targetedMonster
+  }
   let calculatedDamage = (damageNumber + stateObj.playerMonster.strength) * attackNumber;
 
   stateObj = immer.produce(stateObj, (newState) => {
     if (calculatedDamage > 0) {
-      if (all===true) {
+      if (all) {
         newState.opponentMonster.forEach(function (monsterObj) {
           if (monsterObj.hunted > 0) {
             calculatedDamage *=2;
@@ -3396,16 +3404,6 @@ function renderOpponents(stateObj) {
     monsterDiv.classList.add("monster");
     monsterDiv.id = index;
 
-    if (monsterObj.type==="Fire") {
-      monsterDiv.classList.add("monster-fire");
-    } else if (monsterObj.type==="Water") {
-      monsterDiv.classList.add("monster-water");
-    } else if (monsterObj.type==="Air") {
-      monsterDiv.classList.add("monster-air");
-    } else if (monsterObj.type==="Earth") {
-      monsterDiv.classList.add("monster-earth");
-    }
-
     let monsterStatsDiv = document.createElement("Div");  
     monsterStatsDiv.classList.add("monster-top-row");
 
@@ -3463,22 +3461,9 @@ function renderOpponents(stateObj) {
     
 
     let monsterStrengthAndDex = document.createElement("H4");
-    let monsterEncounterEnergy = document.createElement("H4");
-    monsterEncounterEnergy.textContent = "Energy: " + (monsterObj.encounterEnergy) + "/" + (monsterObj.moves.length-1);
-    monsterEncounterEnergy.classList.add("monster-energy");
-
-    if (monsterObj.type==="Fire") {
-      monsterEncounterEnergy.classList.add("monster-energy-fire");
-    } else if (monsterObj.type==="Water") {
-      monsterEncounterEnergy.classList.add("monster-energy-water");
-    } else if (monsterObj.type==="Air") {
-      monsterEncounterEnergy.classList.add("monster-energy-air");
-    } else if (monsterObj.type==="Earth") {
-      monsterEncounterEnergy.classList.add("monster-energy-earth");
-    }
 
     monsterStrengthAndDex.textContent = "Strength: " + monsterObj.strength + " Dex: " + monsterObj.dex;
-    monsterDiv.append(monsterEncounterEnergy, monsterStrengthAndDex);
+    monsterDiv.append(monsterStrengthAndDex);
 
     
 
@@ -3517,77 +3502,48 @@ function renderOpponents(stateObj) {
         powerDiv.append(powerName, powerText);
         opponentMoveListDiv.appendChild(powerDiv);
 
-
       })
     }
 
-    monsterObj.moves.forEach(function (moveObj, moveIndex) {
-      let moveDiv = document.createElement("Div");
-
-      if (moveIndex === monsterObj.opponentMoveIndex) {
-        moveDiv.classList.add("chosen");
-        moveDiv.classList.add("energy-filled");
-      }
-
-      if (moveObj.name) {
-        moveDiv.id = moveIndex;
-        moveDiv.classList.add("move");
-        if (monsterObj.type==="Fire") {
-          moveDiv.classList.add("move-div-fire");
-        } else if (monsterObj.type==="Water") {
-          moveDiv.classList.add("move-div-water");
-        } else if (monsterObj.type==="Air") {
-          moveDiv.classList.add("move-div-air");
-        } else if (monsterObj.type==="Earth") {
-          moveDiv.classList.add("move-div-earth");
-        }
-        let moveNameCostDiv = document.createElement("Div");
-        moveNameCostDiv.classList.add("move-name-cost");
-
-        let moveName = document.createElement("H3");
-        let moveCost = document.createElement("P");
-        moveName.textContent = moveObj.name;
-        moveCost.textContent = moveObj.energyChange;
-        moveCost.classList.add("energy-cost");
-        moveNameCostDiv.append(moveName, moveCost);
-
-        let moveText = document.createElement("P");
-        if (typeof moveObj.text === "function") {
-          moveText.textContent = moveObj.text(stateObj, index, stateObj.opponentMonster);
-        } else {
-          moveText.textContent = moveObj.text;
-        }
-
-        if (moveIndex < monsterObj.opponentMoveIndex) {
-          moveDiv.classList.add("energy-filled");
-          moveDiv.classList.add("not-chosen");
-        }
-        
-        moveDiv.append(moveNameCostDiv, moveText);
-      } else {
-        if (monsterObj.type==="Fire") {
-          moveDiv.classList.add("move-div-fire");
-        } else if (monsterObj.type==="Water") {
-          moveDiv.classList.add("move-div-water");
-        } else if (monsterObj.type==="Air") {
-          moveDiv.classList.add("move-div-air");
-        } else if (monsterObj.type==="Earth") {
-          moveDiv.classList.add("move-div-earth");
-        }
-        moveDiv.classList.add("fake-move-div");
-        moveDiv.classList.add("move");
-        if (moveIndex <= monsterObj.encounterEnergy) {
-          moveDiv.classList.add("energy-filled");
-        }
-      }
-
-      
-      opponentMoveListDiv.appendChild(moveDiv);
-    });
-
+    const chosenIndex = stateObj.opponentMonster[index].opponentMoveIndex;
+    const chosenMove = monsterObj.moves[chosenIndex];
+  
+    
+    let moveDiv = document.createElement("Div");
+    moveDiv.id = chosenIndex;
+    moveDiv.classList.add("move", "chosen");
+    
+    // color/theme by element type
+    if (monsterObj.type === "Fire") {
+      moveDiv.classList.add("move-div-fire");
+    } else if (monsterObj.type === "Water") {
+      moveDiv.classList.add("move-div-water");
+    } else if (monsterObj.type === "Air") {
+      moveDiv.classList.add("move-div-air");
+    } else if (monsterObj.type === "Earth") {
+      moveDiv.classList.add("move-div-earth");
+    }
+    
+    // header row (name only; no energy shown)
+    let moveNameCostDiv = document.createElement("Div");
+    moveNameCostDiv.classList.add("move-name-cost");
+    
+    let moveName = document.createElement("H3");
+    moveName.textContent = chosenMove.name || "";
+    
+    moveNameCostDiv.append(moveName);
+    
+    // body text
+    let moveText = document.createElement("P");
+    moveText.textContent = (typeof chosenMove.text === "function")
+      ? chosenMove.text(stateObj, index, stateObj.opponentMonster)
+      : (chosenMove.text || "");
+    
+    moveDiv.append(moveNameCostDiv, moveText);
+    opponentMoveListDiv.appendChild(moveDiv);
+    
     monsterDiv.appendChild(opponentMoveListDiv);
     document.getElementById("opponents").append(monsterDiv);
-
   });
 }
 
@@ -3657,24 +3613,32 @@ function resetState() {
 
 
 
+async function pickOpponentMove(stateObj) {
+  return immer.produce(stateObj, (newState) => {
+    newState.opponentMonster.forEach(function (monsterObj, index) {
+      let randomMoveIndex = Math.floor(Math.random() * (monsterObj.moves.length))
+      newState.opponentMonster[index].opponentMoveIndex = randomMoveIndex 
+    });
+  });
+}
 
 //needs to return when it reaches the first playable move to prevent it from always playing the last move
 //chooses a random number based on the length of the opponent' moves and highlights it
-async function pickOpponentMove(stateObj) {
-  let toChangeState = immer.produce(stateObj, (newState) => {
-    newState.opponentMonster.forEach(function (monsterObj, index) {
-      for (var i = 0; i < monsterObj.moves.length; i++) {
-        if (monsterObj.encounterEnergy >= monsterObj.moves[i].minReq) {
-          newState.opponentMonster[index].opponentMoveIndex = i;
-        }
-      }
-    //console.log(monsterObj.name + " picked " + monsterObj.moves[monsterObj.opponentMoveIndex]);  
-    });
-  });
+// async function pickOpponentMove(stateObj) {
+//   let toChangeState = immer.produce(stateObj, (newState) => {
+//     newState.opponentMonster.forEach(function (monsterObj, index) {
+//       for (var i = 0; i < monsterObj.moves.length; i++) {
+//         if (monsterObj.encounterEnergy >= monsterObj.moves[i].minReq) {
+//           newState.opponentMonster[index].opponentMoveIndex = i;
+//         }
+//       }
+//     //console.log(monsterObj.name + " picked " + monsterObj.moves[monsterObj.opponentMoveIndex]);  
+//     });
+//   });
   
-  //changeState(toChangeState);
-  return toChangeState;
-}
+//   //changeState(toChangeState);
+//   return toChangeState;
+// }
 
 
 // async function playOpponentMove2(stateObj) {
@@ -3832,6 +3796,7 @@ async function startEncounter(stateObj) {
   stateObj = shuffleDraw(stateObj);
   stateObj = immer.produce(stateObj, (newState) => {
     newState.fightStarted = true;
+    newState.playerMonster.encounterEnergy = newState.playerMonster.turnEnergy + newState.playerMonster.startingEnergy
   })
   await changeState(stateObj);
   return stateObj
@@ -3848,6 +3813,7 @@ async function endTurnIncrement(stateObj) {
     newState.comboPerTurn = 0;
     newState.combatTurnNumber += 1;
     newState.playerMonster.encounterBlock += newState.blockPerTurn;
+    newState.playerMonster.encounterEnergy += newState.playerMonster.turnEnergy
     newState.opponentMonster.forEach(async (monsterObj, monsterIndex) => {
       if (monsterObj.hunted > 0) {
         monsterObj.hunted -=1;
